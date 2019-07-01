@@ -44,3 +44,47 @@ class ResidualBlock_noBN(nn.Module):
         out = F.relu(self.conv1(x), inplace=True)
         out = self.conv2(out)
         return identity + out
+
+
+
+def calculate_mean_std():
+
+    class MyDataset(Dataset):
+        def __init__(self,img_list):
+            self.data =img_list
+
+        def __getitem__(self, index):
+            #x = self.data[index]
+            img=self.data[index]
+
+
+            return ToTensor()(Image.open(img))
+
+        def __len__(self):
+            return len(self.data)
+
+
+    dataset = MyDataset(img_list)
+    loader = DataLoader(
+        dataset,
+        batch_size=1,
+        num_workers=1,
+        shuffle=False
+    )
+
+    mean = 0.
+    std = 0.
+    nb_samples = 0.
+    i=0
+    for data in tqdm(loader):
+        #print(type(data))
+        batch_samples = data.size(0)
+        data = data.view(batch_samples, data.size(1), -1)
+        mean += data.mean(2).sum(0)
+        std += data.std(2).sum(0)
+        nb_samples += batch_samples
+        i=i+1
+    mean /= nb_samples
+    std /= nb_samples
+
+    print(i,mean,std)
